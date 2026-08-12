@@ -1,0 +1,5 @@
+name: everyday-muse
+path: everyday-muse
+description: Finds a quiet truth about ordinary life, then a real sourced quote that echoes it
+runtime:
+  llm_mode: managed

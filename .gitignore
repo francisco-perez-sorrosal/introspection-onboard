@@ -1,0 +1,7 @@
+# Generated Pi runtime state
+.pi/bin/
+.pi/mcp-session.json
+.pi/mcporter.json
+
+# Local capability bindings — endpoints and credentials never belong in the repo
+.pi/mcp.local.json

@@ -1,0 +1,9 @@
+name: agent
+description: Finds a quiet truth about ordinary life, then a real sourced quote that echoes it.
+model:
+  name: anthropic/claude-sonnet-4-6
+  thinking_level: low
+tools:
+  - parallel_search
+skills: []
+subagents: []

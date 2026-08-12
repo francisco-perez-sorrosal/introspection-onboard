@@ -1,0 +1,29 @@
+{
+  "name": "everyday-muse",
+  "version": "0.1.1",
+  "description": "Finds a quiet truth about ordinary life, then a real sourced quote that echoes it.",
+  "keywords": [
+    "pi-package",
+    "managed-agent",
+    "recipe"
+  ],
+  "type": "module",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-agent-core": "*",
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "pi": {
+    "agents": [
+      "./agents/*.yaml"
+    ],
+    "extensions": [
+      "./extensions/parallel-search.ts"
+    ]
+  }
+}

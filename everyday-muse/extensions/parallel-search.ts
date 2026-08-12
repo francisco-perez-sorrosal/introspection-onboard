@@ -108,14 +108,20 @@ export default function parallelSearchExtension(pi: any) {
     },
 
     async execute(_toolCallId: string, params: any, signal?: AbortSignal) {
+      // Two environments, two ways the credential arrives.
+      //
+      // Locally, Pi inherits the shell, so PARALLEL_API_KEY is present and we
+      // set the header ourselves. On a managed runtime the key deliberately
+      // never enters the sandbox: an endpoint binding injects `x-api-key` at
+      // the egress boundary on the way out. Sending no header is therefore the
+      // correct behavior there, not a misconfiguration — so absence of the
+      // variable must not fail the call.
       const apiKey = process.env.PARALLEL_API_KEY;
-      if (!apiKey) {
-        return toolResult(
-          "error",
-          "SEARCH ERROR: PARALLEL_API_KEY is not set in this environment, so no search was performed. " +
-            "This is a configuration failure, not an empty result — do not treat it as 'no quote exists'.",
-          { reason: "missing_api_key" },
-        );
+      const headers: Record<string, string> = {
+        "content-type": "application/json",
+      };
+      if (apiKey) {
+        headers["x-api-key"] = apiKey;
       }
 
       const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
@@ -125,10 +131,7 @@ export default function parallelSearchExtension(pi: any) {
       try {
         response = await fetch(SEARCH_ENDPOINT, {
           method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-api-key": apiKey,
-          },
+          headers,
           body: JSON.stringify({
             objective: params.objective,
             search_queries: params.search_queries,
@@ -142,6 +145,21 @@ export default function parallelSearchExtension(pi: any) {
           `SEARCH ERROR: the request to Parallel failed (${message}). No results were retrieved. ` +
             "This is a transport failure, not an empty result.",
           { reason: "request_failed" },
+        );
+      }
+
+      if (response.status === 401 || response.status === 403) {
+        // The one failure whose cause differs by environment, so name both.
+        return toolResult(
+          "error",
+          `SEARCH ERROR: Parallel rejected the request as unauthorized (HTTP ${response.status}). ` +
+            (apiKey
+              ? "A PARALLEL_API_KEY was supplied from the environment; it is likely invalid or expired."
+              : "No key was supplied locally, which is expected on a managed runtime — the egress " +
+                "endpoint binding should have injected `x-api-key`. Check that the binding exists " +
+                "for this runtime and environment.") +
+            " This is a configuration failure, not an empty result.",
+          { reason: "unauthorized", status_code: response.status, key_from_env: Boolean(apiKey) },
         );
       }
 

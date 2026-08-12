@@ -38,9 +38,14 @@ introspection local --runtime everyday-muse -p "resilience"  # themed
 
 ## Requirements
 
-`PARALLEL_API_KEY` must be set in the environment. The agent's only external capability is the [Parallel Search API](https://docs.parallel.ai), reached through the `parallel_search` tool in `extensions/parallel-search.ts`. The key is read from the environment by reference and never written into the package.
+The agent's only external capability is the [Parallel Search API](https://docs.parallel.ai), reached through the `parallel_search` tool in `extensions/parallel-search.ts`. The credential is never written into the package, and reaches the tool differently in each environment:
 
-Without it the agent still runs and still produces an observation — the search reports a configuration error, and the agent reports honestly that it could not source a quote.
+| | how `x-api-key` is supplied |
+|---|---|
+| **Locally** | `PARALLEL_API_KEY` from your shell; Pi inherits it and the tool sets the header |
+| **Deployed** | An endpoint binding injects it at the egress boundary. The key never enters the sandbox, so the tool sends no key header — that is correct, not a misconfiguration |
+
+Presence of the environment variable is what distinguishes the two. Locally, without it, Parallel will reject the request and the agent reports honestly that it could not source a quote rather than inventing one.
 
 ## Layout
 
